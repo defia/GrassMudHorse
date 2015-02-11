@@ -1,0 +1,9 @@
+{
+	"Listen":":1080",
+	"Interval":1000,
+	"Timeout":500,
+	"IPv6":false,
+	"PayloadSize":1024,
+	"HistorySize":100,
+	"Servers":["8.8.8.8:5678","192.168.1.1:1234"]
+}
