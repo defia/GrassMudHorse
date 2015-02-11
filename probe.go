@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
+	"strings"
 	"time"
 )
 
@@ -56,18 +56,20 @@ func NewProbe(config *Config) *Probe {
 	}
 	p.Interval = time.Duration(config.Interval) * time.Millisecond
 	for i, v := range config.Servers {
-		addr, err := net.ResolveTCPAddr("tcp", v)
-		if err != nil {
-			log.Fatal(err)
-		}
+		addr := CutPort(v)
+
 		p.Servers[i] = &Server{
 			Address: v,
-			P:       NewPinger(addr.IP.String(), config.Timeout, config.PayloadSize, version),
+			P:       NewPinger(addr, config.Timeout, config.PayloadSize, version),
 			Stat:    NewStat(config.HistorySize),
 		}
 	}
 	p.fastestServer = p.Servers[0]
 	return p
+}
+
+func CutPort(addr string) string {
+	return strings.Split(addr, ":")[0]
 }
 
 func (p *Probe) Start() {

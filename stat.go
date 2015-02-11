@@ -92,5 +92,5 @@ func (stat *Stat) AverageLatency() time.Duration {
 }
 
 func (stat *Stat) Score() float64 {
-	return float64(100.0) / (float64(stat.AverageLatency()) / (stat.DropRate() + 0.0001))
+	return float64(100.0) / (float64(stat.AverageLatency()) / (1.0001 - stat.DropRate()))
 }
