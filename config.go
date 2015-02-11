@@ -13,6 +13,15 @@ type Config struct {
 	PayloadSize int
 	HistorySize int
 	Servers     []string
+	Mailconfig  MailConfig
+}
+type MailConfig struct {
+	User            string
+	Password        string
+	Host            string
+	To              string
+	WarningThrottle float64
+	RecoverThrottle float64
 }
 
 func ReadConfig(filename string) (*Config, error) {

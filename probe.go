@@ -8,9 +8,12 @@ import (
 )
 
 type Probe struct {
-	Servers       []*Server
-	Interval      time.Duration
-	fastestServer *Server
+	Servers            []*Server
+	Interval           time.Duration
+	fastestServer      *Server
+	config             *Config
+	recentsendmailtime time.Time
+	badflag            bool
 }
 
 type Server struct {
@@ -26,22 +29,30 @@ func (s *Server) String() string {
 func (p *Probe) GetFastestServer() string {
 	return p.fastestServer.Address
 }
-func (p *Probe) getFastestServer() *Server {
+func (p *Probe) getFastestServer() (*Server, float64) {
 	max := p.Servers[0]
 	maxscore := p.Servers[0].Stat.Score()
+	mindroprate := p.Servers[0].Stat.DropRate()
 	for _, v := range p.Servers {
 		debugOut(v)
 		if score := v.Stat.Score(); score > maxscore {
 			maxscore = score
 			max = v
 		}
+		if droprate := v.Stat.DropRate(); droprate < mindroprate {
+			mindroprate = droprate
+		}
 	}
 	debugOut("max:", max.Address)
-	return max
+	return max, mindroprate
 }
 
 func NewProbe(config *Config) *Probe {
+
 	p := new(Probe)
+	p.badflag = false
+	p.config = config
+	p.recentsendmailtime = time.Unix(0, 0)
 	length := len(config.Servers)
 	if length <= 0 {
 		log.Fatal("server list empty")
@@ -74,8 +85,37 @@ func CutPort(addr string) string {
 
 func (p *Probe) Start() {
 	go func() {
+
+		mailconfig := p.config.Mailconfig
+		var rate float64
 		for {
-			p.fastestServer = p.getFastestServer()
+			p.fastestServer, rate = p.getFastestServer()
+			if !p.badflag && rate > mailconfig.WarningThrottle && time.Now().Sub(p.recentsendmailtime) > time.Minute*5 {
+				log.Println("bad")
+				err := SendMail(mailconfig.User, mailconfig.Password, mailconfig.Host, mailconfig.To, true)
+				if err == nil {
+
+					p.badflag = true
+					p.recentsendmailtime = time.Now()
+
+				} else {
+					log.Println(err)
+				}
+				continue
+			}
+			if p.badflag && mailconfig.RecoverThrottle > rate {
+				log.Println("recover")
+				err := SendMail(mailconfig.User, mailconfig.Password, mailconfig.Host, mailconfig.To, false)
+				if err == nil {
+					p.badflag = false
+					p.recentsendmailtime = time.Now()
+
+				} else {
+					log.Println(err)
+				}
+
+			}
+
 			time.Sleep(time.Second)
 		}
 	}()
