@@ -32,7 +32,7 @@ var sampleconfig = &Config{
 	IPv6:        false,
 	PayloadSize: 1024,
 	HistorySize: 100,
-	Servers:     []string{"127.0.0.1", "192.168.1.1"},
+	Servers:     []string{"8.8.8.8:5678", "192.168.1.1:1234"},
 }
 
 func Test_ReadConfig(t *testing.T) {
@@ -47,15 +47,15 @@ func Test_ReadConfig(t *testing.T) {
 }
 
 func Test_Stat(t *testing.T) {
-	var latency = []time.Duration{100, 200, 150, 300}
-	var drop = []bool{true, false, false, true}
-	var averagelatency = []time.Duration{100, 150, 175, 225}
-	var droprate = []float64{1, 0.5, 0, 0.5}
+	latency := []time.Duration{0, 200, 150, 0}
+	drop := []bool{true, false, false, true}
+	averagelatency := []time.Duration{time.Second * 10, 200, 175, 150}
+	droprate := []float64{1, 0.5, 0, 0.5}
 	stat := NewStat(2)
 	for i := 0; i < 4; i++ {
 		stat.AddResult(latency[i], drop[i])
 		if stat.AverageLatency() != averagelatency[i] || stat.DropRate() != droprate[i] {
-			log.Fatal("")
+			log.Fatal(stat.AverageLatency(), averagelatency[i], stat.DropRate(), droprate[i])
 		}
 	}
 

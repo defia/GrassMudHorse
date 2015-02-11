@@ -85,12 +85,12 @@ func (stat *Stat) AverageLatency() time.Duration {
 	if stat.Count != 0 && stat.DroppedNum == stat.Count {
 		return time.Second * 10
 	}
-	if stat.Count-stat.DroppedNum == 0 {
-		return 0
+	if stat.Count == stat.DroppedNum {
+		return time.Nanosecond
 	}
 	return stat.LatencySum / time.Duration(stat.Count-stat.DroppedNum)
 }
 
 func (stat *Stat) Score() float64 {
-	return float64(100.0) / (float64(stat.AverageLatency())*(stat.DropRate()) + 0.0001)
+	return float64(100.0) / (float64(stat.AverageLatency()) / (stat.DropRate() + 0.0001))
 }
