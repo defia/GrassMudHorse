@@ -3,6 +3,7 @@ package main
 import (
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 func sendMail(user, password, host, to, subject, body, mailtype string) error {
@@ -31,5 +32,16 @@ func SendMail(user, password, host, to string, typ bool) error {
 	} else {
 		subject = "有服务器恢复正常"
 	}
-	return sendMail(user, password, host, to, subject, "建议您更改设置", "html")
+	go func() {
+		for i := 0; i < 5; i++ {
+			err := sendMail(user, password, host, to, subject, "建议您更改设置", "html")
+			if err != nil {
+				time.Sleep(time.Second * 3)
+				continue
+
+			}
+			break
+		}
+	}()
+	return nil
 }
