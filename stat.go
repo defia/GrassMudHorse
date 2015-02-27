@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"sync"
 	"time"
 )
@@ -92,5 +93,7 @@ func (stat *Stat) AverageLatency() time.Duration {
 }
 
 func (stat *Stat) Score() float64 {
-	return float64(100.0) / (float64(stat.AverageLatency()) / (1.0001 - stat.DropRate()))
+	ping := float64(stat.AverageLatency())
+	lost := float64(stat.DropRate())
+	return math.Pow((1-lost), 50) / ping
 }
