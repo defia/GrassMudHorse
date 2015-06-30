@@ -51,7 +51,7 @@ func Test_Stat(t *testing.T) {
 	drop := []bool{true, false, false, true}
 	averagelatency := []time.Duration{time.Second * 10, 200, 175, 150}
 	droprate := []float64{1, 0.5, 0, 0.5}
-	stat := NewStat(2)
+	stat := NewStat(2, nil)
 	for i := 0; i < 4; i++ {
 		stat.AddResult(latency[i], drop[i])
 		if stat.AverageLatency() != averagelatency[i] || stat.DropRate() != droprate[i] {
@@ -63,4 +63,15 @@ func Test_Stat(t *testing.T) {
 
 func Test_GetFastestServer(t *testing.T) {
 
+}
+
+func Test_NewLuaScorer(t *testing.T) {
+	probe := NewProbe(sampleconfig)
+	_, err := NewLuaScorer(probe.Servers[0], "nofile.lua")
+	t.Log(err)
+	ls, err := NewLuaScorer(probe.Servers[0], "script.lua")
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Println(ls.Score())
 }

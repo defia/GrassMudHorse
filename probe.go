@@ -17,6 +17,7 @@ type Server struct {
 	Address string
 	P       *pinger
 	Stat    *Stat
+	Scorer  Scorer
 }
 
 func (s *Server) String() string {
@@ -28,10 +29,11 @@ func (p *Probe) GetFastestServer() string {
 }
 func (p *Probe) getFastestServer() *Server {
 	max := p.Servers[0]
-	maxscore := p.Servers[0].Stat.Score()
+	//stat := p.Servers[0].Stat
+	maxscore := p.Servers[0].Scorer.Score()
 	for _, v := range p.Servers {
 		debugOut(v)
-		if score := v.Stat.Score(); score > maxscore {
+		if score := v.Scorer.Score(); score > maxscore {
 			maxscore = score
 			max = v
 		}
@@ -55,13 +57,23 @@ func NewProbe(config *Config) *Probe {
 		version = ICMPv4
 	}
 	p.Interval = time.Duration(config.Interval) * time.Millisecond
+
 	for i, v := range config.Servers {
 		addr := CutPort(v)
 
 		p.Servers[i] = &Server{
 			Address: v,
 			P:       NewPinger(addr, config.Timeout, config.PayloadSize, version),
-			Stat:    NewStat(config.HistorySize),
+			Stat:    NewStat(config.HistorySize, nil),
+		}
+		if config.Lua != "" {
+			p.Servers[i].Scorer = NewDefaultScorer(p.Servers[i])
+		} else {
+			var err error
+			p.Servers[i].Scorer, err = NewLuaScorer(p.Servers[i], config.Lua)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 	p.fastestServer = p.Servers[0]

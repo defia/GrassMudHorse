@@ -13,6 +13,7 @@ type Config struct {
 	PayloadSize int
 	HistorySize int
 	Servers     []string
+	Lua         string
 }
 
 func ReadConfig(filename string) (*Config, error) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"sync"
 	"time"
 )
@@ -63,8 +62,9 @@ func (stat *Stat) addResult(newresult *Result) {
 
 }
 
-func NewStat(max int) *Stat {
-	return &Stat{
+func NewStat(max int, scorer Scorer) *Stat {
+
+	stat := &Stat{
 		History:        make([]*Result, max),
 		lock:           &sync.Mutex{},
 		historyKeepMax: max,
@@ -73,27 +73,24 @@ func NewStat(max int) *Stat {
 		LatencySum:     0,
 		DroppedNum:     0,
 	}
+
+	return stat
 }
 
 func (stat *Stat) DropRate() float64 {
-	if stat.Count == 0 {
-		return 0
+	if stat == nil || stat.Count == 0 {
+		return 1
 	}
 	return float64(stat.DroppedNum) / float64(stat.Count)
 }
 
 func (stat *Stat) AverageLatency() time.Duration {
-	if stat.Count != 0 && stat.DroppedNum == stat.Count {
+	if stat == nil || (stat.Count != 0 && stat.DroppedNum == stat.Count) {
 		return time.Second * 10
 	}
-	if stat.Count == stat.DroppedNum {
-		return time.Nanosecond
+
+	if stat.Count == stat.DroppedNum { //return time.Nanosecond in old version
+		return time.Second * 10
 	}
 	return stat.LatencySum / time.Duration(stat.Count-stat.DroppedNum)
-}
-
-func (stat *Stat) Score() float64 {
-	ping := float64(stat.AverageLatency())
-	lost := float64(stat.DropRate())
-	return math.Pow((1-lost), 50) / ping
 }
