@@ -66,7 +66,7 @@ func NewProbe(config *Config) *Probe {
 			P:       NewPinger(addr, config.Timeout, config.PayloadSize, version),
 			Stat:    NewStat(config.HistorySize, nil),
 		}
-		if config.Lua != "" {
+		if config.Lua == "" {
 			p.Servers[i].Scorer = NewDefaultScorer(p.Servers[i])
 		} else {
 			var err error
