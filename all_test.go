@@ -75,3 +75,28 @@ func Test_NewLuaScorer(t *testing.T) {
 	}
 	log.Println(ls.Score())
 }
+
+func Benchmark_LuaScore(b *testing.B) {
+	probe := NewProbe(sampleconfig)
+
+	ls, err := NewLuaScorer(probe.Servers[0], "script.lua")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	for n := 0; n < b.N; n++ {
+		ls.Score()
+	}
+
+}
+
+func Benchmark_NativeScore(b *testing.B) {
+	probe := NewProbe(sampleconfig)
+
+	ds := NewDefaultScorer(probe.Servers[0])
+
+	for n := 0; n < b.N; n++ {
+		ds.Score()
+	}
+
+}
