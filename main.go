@@ -14,7 +14,7 @@ var debug *bool
 
 func main() {
 	debug = flag.Bool("debug", false, "output debug msg")
-	web := flag.String("web", ":1234", "web log listening ip:port")
+	web := flag.String("web", "", "web log listening ip:port")
 	config, err := ReadConfig(FileName)
 	flag.Parse()
 	if err != nil {
@@ -23,6 +23,9 @@ func main() {
 	p := NewProbe(config)
 	go p.Start()
 	go ListenAndServe(config.Listen, p.GetFastestServer)
+	if *web == "" {
+		return
+	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "<html><body>")
 		for _, v := range p.Servers {
