@@ -14,7 +14,7 @@ var debug *bool
 
 func main() {
 	debug = flag.Bool("debug", false, "output debug msg")
-	web := flag.String("web", "", "web log listening ip:port")
+	web := flag.String("web", ":1234", "web log listening ip:port")
 	config, err := ReadConfig(FileName)
 	flag.Parse()
 	if err != nil {

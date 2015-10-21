@@ -5,5 +5,6 @@ MAINTAINER defia <defiaq@gmail.com>
 COPY * $GOPATH/src/app/
 WORKDIR $GOPATH/src/app/
 EXPOSE 8888
+EXPOSE 1234
 RUN go get && go install
 ENTRYPOINT wget -o=config.json $URL && $GOPATH/bin/app
