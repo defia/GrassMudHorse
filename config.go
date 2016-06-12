@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
@@ -17,11 +17,11 @@ type Config struct {
 }
 
 func ReadConfig(filename string) (*Config, error) {
-	b, err := ioutil.ReadFile(filename)
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	config := new(Config)
-	err = json.Unmarshal(b, config)
+	err = json.NewDecoder(f).Decode(config)
 	return config, err
 }
